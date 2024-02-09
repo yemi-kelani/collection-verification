@@ -1,0 +1,51 @@
+---
+#
+# Copyright 2023 IBM Inc. All rights reserved
+# SPDX-License-Identifier: Apache2.0
+#
+
+# tasks file for add-zos-user
+
+- name: Injecting Failure here for tutorial
+  ansible.builtin.fail:
+    msg: "Injected failure for tutorial"
+
+- name: Verify user does not exist
+  ibm.ibm_zos_core.zos_tso_command:
+    commands: LISTUSER ({{ userid | upper }})
+  register: listuser_response
+  failed_when: false
+
+- name: Assert desired userid is not in use
+  ansible.builtin.fail:
+    msg: "User ID {{ userid | upper }} is in use."
+  when: '"UNABLE TO LOCATE USER" not in listuser_response.get("output", [{}])[0].get("content", [""])[0]'
+  ignore_errors: true
+
+- name: Generate password
+  ansible.builtin.set_fact:
+    password: "{{ '' | generate_password }}"
+  when: (password is not defined or not password) and generate_password is defined and generate_password
+  no_log: true
+
+- name: Generate passphrase
+  ansible.builtin.set_fact:
+    passphrase: "{{ '' | generate_passphrase }}"
+  when: (passphrase is not defined or not passphrase) and generate_passphrase is defined and generate_passphrase
+  no_log: true
+
+- name: Add user
+  ibm.ibm_zos_core.zos_tso_command:
+    commands: "{{ lookup('template', '../templates/add-user.j2') }}"
+  register: add_user_output
+  ignore_errors: true
+
+- name: Create generic profile, without support for enhanced generic naming
+  ibm.ibm_zos_core.zos_tso_command:
+    commands: "ADDSD '{{ userid | upper }}.*' UACC(NONE)"
+  ignore_errors: true
+
+
+# - name: Send email containing login credentials to {{ email_to }}
+#   debug:
+#     msg: "A new UserID has been created on {{ zosendpoint }}. UserID: '{{ userid | upper }}' Password: '{{ password }}' Passphrase: '{{ passphrase }}'"
