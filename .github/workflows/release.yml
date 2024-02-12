@@ -5,9 +5,6 @@ on:
     tags:
       - "**"
 
-env:
-  FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ vars.COLLECTION_PATH }}"
-
 permissions:
   contents: write
 
@@ -45,6 +42,10 @@ jobs:
     name: Publish
     needs: release
     runs-on: ubuntu-latest
+    enviornment: release
+
+    env:
+      FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ vars.COLLECTION_PATH }}"
 
     steps:
       - name: Determine tag
@@ -66,8 +67,6 @@ jobs:
 
       - name: Build Collection
         run: |
-          echo ${GITHUB_WORKSPACE}
-          echo ${{ vars.COLLECTION_PATH }}
           ansible-galaxy collection build ${FULL_COLLECTION_PATH} -f --output-path ${FULL_COLLECTION_PATH}/local/builds
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
