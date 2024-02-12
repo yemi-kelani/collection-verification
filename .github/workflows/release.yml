@@ -91,10 +91,10 @@ jobs:
           rm -rf ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/
           cd ${GITHUB_WORKSPACE}/${COLLECTION_PATH}
           ansible-playbook ibm.operator_collection_sdk.create_offline_requirements
-          ansible-galaxy collection build ${GITHUB_WORKSPACE}/${COLLECTION_PATH} -f --output-path $  {GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds
+          ansible-galaxy collection build ${GITHUB_WORKSPACE}/${COLLECTION_PATH} -f --output-path ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds
           COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)
           mv ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/${COLLECTION_BUILD}${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/${COLLECTION_NAME}-offline-${RELEASE}.tar.gz
-          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/$(ls $  {GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
+          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
@@ -116,3 +116,8 @@ jobs:
           gh release upload ${RELEASE_TAG} ${SIGNATURE_OFFLINE}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
+
+      - name: Publish Collection to Ansible Galaxy
+        run: ansible-galaxy collection publish -vvvv --api-key ${GALAXY_API_KEY} ${COLLECTION_BUILD_LOCATION}
+        env:
+          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
