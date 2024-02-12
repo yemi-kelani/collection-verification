@@ -6,7 +6,7 @@ on:
       - "**"
 
 env:
-  FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ env.COLLECTION_PATH }}"
+  FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ vars.COLLECTION_PATH }}"
 
 permissions:
   contents: write
@@ -75,11 +75,11 @@ jobs:
       - name: Sign Collection
         run: |
           openssl genrsa -out privatekey.pem 2048
-          openssl rsa -in privatekey.pem -out ${{ env.COLLECTION_NAME }}.pub -outform PEM -pubout
-          openssl dgst -sha256 -sign privatekey.pem -out ${{ env.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
-          openssl dgst -sha256 -verify ${{ env.COLLECTION_NAME }}.pub -signature ${{ env.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
-          echo "PUBLIC_KEY=$(readlink -f ${{ env.COLLECTION_NAME }}.pub)" >> $GITHUB_ENV
-          echo "SIGNATURE=$(readlink -f ${{ env.COLLECTION_NAME }}-${RELEASE}.sig)" >> $GITHUB_ENV
+          openssl rsa -in privatekey.pem -out ${{ vars.COLLECTION_NAME }}.pub -outform PEM -pubout
+          openssl dgst -sha256 -sign privatekey.pem -out ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
+          openssl dgst -sha256 -verify ${{ vars.COLLECTION_NAME }}.pub -signature ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
+          echo "PUBLIC_KEY=$(readlink -f ${{ vars.COLLECTION_NAME }}.pub)" >> $GITHUB_ENV
+          echo "SIGNATURE=$(readlink -f ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
@@ -98,7 +98,7 @@ jobs:
           ansible-playbook ibm.operator_collection_sdk.create_offline_requirements
           ansible-galaxy collection build ${FULL_COLLECTION_PATH} -f --output-path ${FULL_COLLECTION_PATH}/local/builds
           COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)
-          mv ${FULL_COLLECTION_PATH}/local/builds/${COLLECTION_BUILD}${FULL_COLLECTION_PATH}/local/builds/${{ env.COLLECTION_NAME }}-offline-${RELEASE}.tar.gz
+          mv ${FULL_COLLECTION_PATH}/local/builds/${COLLECTION_BUILD}${FULL_COLLECTION_PATH}/local/builds/${{ vars.COLLECTION_NAME }}-offline-${RELEASE}.tar.gz
           echo "COLLECTION_BUILD_OFFLINE_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
@@ -106,11 +106,11 @@ jobs:
       - name: Sign Offline Collection
         run: |
           openssl genrsa -out privatekey-offline.pem 2048
-          openssl rsa -in privatekey-offline.pem -out ${{ env.COLLECTION_NAME }}-offline.pub -outform PEM -pubout
-          openssl dgst -sha256 -sign privatekey-offline.pem -out ${{ env.COLLECTION_NAME }}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
-          openssl dgst -sha256 -verify ${{ env.COLLECTION_NAME }}-offline.pub -signature ${{ env.COLLECTION_NAME }}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
-          echo "PUBLIC_KEY_OFFLINE=$(readlink -f ${{ env.COLLECTION_NAME }}-offline.pub)" >> $GITHUB_ENV
-          echo "SIGNATURE_OFFLINE=$(readlink -f ${{ env.COLLECTION_NAME }}-${RELEASE}-offline.sig)" >> $GITHUB_ENV
+          openssl rsa -in privatekey-offline.pem -out ${{ vars.COLLECTION_NAME }}-offline.pub -outform PEM -pubout
+          openssl dgst -sha256 -sign privatekey-offline.pem -out ${{ vars.COLLECTION_NAME }}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
+          openssl dgst -sha256 -verify ${{ vars.COLLECTION_NAME }}-offline.pub -signature ${{ vars.COLLECTION_NAME }}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
+          echo "PUBLIC_KEY_OFFLINE=$(readlink -f ${{ vars.COLLECTION_NAME }}-offline.pub)" >> $GITHUB_ENV
+          echo "SIGNATURE_OFFLINE=$(readlink -f ${{ vars.COLLECTION_NAME }}-${RELEASE}-offline.sig)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
