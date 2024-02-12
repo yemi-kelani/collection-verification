@@ -70,14 +70,17 @@ jobs:
 
       - name: Build Collection
         run: |
-          ls "${FULL_COLLECTION_PATH}/local"
-
           ansible-galaxy collection build ${FULL_COLLECTION_PATH} -f --output-path ${FULL_COLLECTION_PATH}/local/builds
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
+          ls ${FULL_COLLECTION_PATH}/local/builds
+
+          ls ${GITHUB_WORKSPACE}
+
       - name: Sign Collection
         run: |
+
           openssl genrsa -out privatekey.pem 2048
           openssl rsa -in privatekey.pem -out ${{ vars.COLLECTION_NAME }}.pub -outform PEM -pubout
           openssl dgst -sha256 -sign privatekey.pem -out ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
