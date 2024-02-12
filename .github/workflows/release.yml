@@ -63,6 +63,8 @@ jobs:
 
       - name: Build Collection
         run: |
+          echo ${GITHUB_WORKSPACE}
+          echo ${COLLECTION_PATH}
           ansible-galaxy collection build ${GITHUB_WORKSPACE}/${COLLECTION_PATH} -f --output-path ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds
           echo "COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
@@ -116,8 +118,3 @@ jobs:
           gh release upload ${RELEASE_TAG} ${SIGNATURE_OFFLINE}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-
-      - name: Publish Collection to Ansible Galaxy
-        run: ansible-galaxy collection publish -vvvv --api-key ${GALAXY_API_KEY} ${COLLECTION_BUILD_LOCATION}
-        env:
-          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
