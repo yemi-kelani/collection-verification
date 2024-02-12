@@ -42,7 +42,7 @@ jobs:
     name: Publish
     needs: release
     runs-on: ubuntu-latest
-    enviornment: release
+    environment: release
 
     env:
       FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ vars.COLLECTION_PATH }}"
