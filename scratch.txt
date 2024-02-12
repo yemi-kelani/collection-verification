@@ -1,0 +1,3 @@
+
+core.exportVariable('RELEASE_ID', response.data.id);
+core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);

@@ -11,7 +11,7 @@ permissions:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest  
+    runs-on: ubuntu-latest
 
     steps:
       - name: Determine tag
@@ -53,26 +53,28 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.RELEASE_TAG }}
 
+      # install, remove, and modify dependencies as needed
+
       - name: Install Ansible
         run: pip install ansible==8.0.0
 
       - name: Install Operator Collection SDK
-        run: ansible-galaxy collection install git+https://github.com/IBM/operator-collection-sdk.git#ibm/  operator_collection_sdk,develop -f
+        run: ansible-galaxy collection install git+https://github.com/IBM/operator-collection-sdk.git#ibm/      operator_collection_sdk,develop -f
 
       - name: Build Collection
         run: |
-          ansible-galaxy collection build ${GITHUB_WORKSPACE}/freemanlatrell/file_manager -f --output-path $  {GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds
-          echo "COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds)" >> $GITHUB_ENV
-          echo "COLLECTION_BUILD_LOCATION=${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds/$(ls $  {GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds)" >> $GITHUB_ENV
+          ansible-galaxy collection build ${GITHUB_WORKSPACE}/${COLLECTION_PATH} -f --output-path ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds
+          echo "COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
+          echo "COLLECTION_BUILD_LOCATION=${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
       - name: Sign Collection
         run: |
           openssl genrsa -out privatekey.pem 2048
-          openssl rsa -in privatekey.pem -out file-manager.pub -outform PEM -pubout
-          openssl dgst -sha256 -sign privatekey.pem -out file-manager-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
-          openssl dgst -sha256 -verify file-manager.pub -signature file-manager-${RELEASE}.sig $  {COLLECTION_BUILD_LOCATION}
-          echo "PUBLIC_KEY=$(readlink -f file-manager.pub)" >> $GITHUB_ENV
-          echo "SIGNATURE=$(readlink -f file-manager-${RELEASE}.sig)" >> $GITHUB_ENV
+          openssl rsa -in privatekey.pem -out ${COLLECTION_NAME}.pub -outform PEM -pubout
+          openssl dgst -sha256 -sign privatekey.pem -out ${COLLECTION_NAME}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
+          openssl dgst -sha256 -verify ${COLLECTION_NAME}.pub -signature ${COLLECTION_NAME}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
+          echo "PUBLIC_KEY=$(readlink -f ${COLLECTION_NAME}.pub)" >> $GITHUB_ENV
+          echo "SIGNATURE=$(readlink -f ${COLLECTION_NAME}-${RELEASE}.sig)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
@@ -84,31 +86,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
 
+
+
+
+
+
       - name: Publish Collection to Ansible Galaxy
         run: ansible-galaxy collection publish -vvvv --api-key ${GALAXY_API_KEY} ${COLLECTION_BUILD_LOCATION}
         env:
           GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
 
+
+
+
       - name: Build Offline Collection
         run: |
-          rm -rf ${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/
-          cd ${GITHUB_WORKSPACE}/freemanlatrell/file_manager
+          rm -rf ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/
+          cd ${GITHUB_WORKSPACE}/${COLLECTION_PATH}
           ansible-playbook ibm.operator_collection_sdk.create_offline_requirements
-          ansible-galaxy collection build ${GITHUB_WORKSPACE}/freemanlatrell/file_manager -f --output-path $  {GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds
-          COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds)
-          mv ${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds/${COLLECTION_BUILD}  ${GITHUB_WORKSPACE}/  freemanlatrell/file_manager/local/builds/freemanlatrell-file_manager_offline-${RELEASE}.tar.gz
-          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds/$(ls $  {GITHUB_WORKSPACE}/freemanlatrell/file_manager/local/builds)" >> $GITHUB_ENV
+          ansible-galaxy collection build ${GITHUB_WORKSPACE}/${COLLECTION_PATH} -f --output-path $  {GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds
+          COLLECTION_BUILD=$(ls ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)
+          mv ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/${COLLECTION_BUILD}  ${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/${COLLECTION_NAME}-offline-${RELEASE}.tar.gz
+          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds/$(ls $  {GITHUB_WORKSPACE}/${COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
       - name: Sign Offline Collection
         run: |
           openssl genrsa -out privatekey-offline.pem 2048
-          openssl rsa -in privatekey-offline.pem -out file-manager-offline.pub -outform PEM -pubout
-          openssl dgst -sha256 -sign privatekey-offline.pem -out file-manager-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
-          openssl dgst -sha256 -verify file-manager-offline.pub -signature file-manager-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
-          echo "PUBLIC_KEY_OFFLINE=$(readlink -f file-manager-offline.pub)" >> $GITHUB_ENV
-          echo "SIGNATURE_OFFLINE=$(readlink -f file-manager-${RELEASE}-offline.sig)" >> $GITHUB_ENV
+          openssl rsa -in privatekey-offline.pem -out ${COLLECTION_NAME}-offline.pub -outform PEM -pubout
+          openssl dgst -sha256 -sign privatekey-offline.pem -out ${COLLECTION_NAME}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
+          openssl dgst -sha256 -verify ${COLLECTION_NAME}-offline.pub -signature ${COLLECTION_NAME}-${RELEASE}-offline.sig ${COLLECTION_BUILD_OFFLINE_LOCATION}
+          echo "PUBLIC_KEY_OFFLINE=$(readlink -f ${COLLECTION_NAME}-offline.pub)" >> $GITHUB_ENV
+          echo "SIGNATURE_OFFLINE=$(readlink -f ${COLLECTION_NAME}-${RELEASE}-offline.sig)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
