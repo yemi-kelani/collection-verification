@@ -43,8 +43,6 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     environment: release
-    outputs:
-      build_name: ${{ steps.build.outputs.build_name }}
 
     env:
       FULL_COLLECTION_PATH: "${GITHUB_WORKSPACE}/${{ vars.COLLECTION_PATH }}"
@@ -67,30 +65,17 @@ jobs:
       - name: Install Operator Collection SDK
         run: ansible-galaxy collection install git+https://github.com/IBM/operator-collection-sdk.git#ibm/operator_collection_sdk -f
 
-      - name: Create build folder it it doesn't exist
+      - name: Create local/builds folder it it doesn't exist...
         run: mkdir -p "${{ env.FULL_COLLECTION_PATH }}/local/builds"
 
       - name: Build Collection
-        id: build
         run: |
           ansible-galaxy collection build ${{ env.FULL_COLLECTION_PATH }} -f --output-path ${{ env.FULL_COLLECTION_PATH }}/local/builds
           echo "COLLECTION_BUILD=$(ls ${{ env.FULL_COLLECTION_PATH }}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${{ env.FULL_COLLECTION_PATH }}/local/builds/$(ls ${{ env.FULL_COLLECTION_PATH }}/local/builds)" >> $GITHUB_ENV
 
-          echo "FOO=$(ls '${env.FULL_COLLECTION_PATH}/local/builds')" >> $GITHUB_ENV
-          echo "BUILD_NAME=$(ls '${env.FULL_COLLECTION_PATH}')" >> $GITHUB_OUTPUT
-
       - name: Sign Collection
         run: |
-          echo "Test 1 - FOO ENV"
-          echo "${{ env.FOO }}"
-
-          echo "Test 2 - OUTPUTS"
-          echo "$BUILD_NAME"
-
-          echo "Test 3 - OUTPUTS DIRECT"
-          echo "${{ steps.build.outputs.build_name }}"
-
           openssl genrsa -out privatekey.pem 2048
           openssl rsa -in privatekey.pem -out ${{ vars.COLLECTION_NAME }}.pub -outform PEM -pubout
           openssl dgst -sha256 -sign privatekey.pem -out ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
@@ -98,7 +83,6 @@ jobs:
           echo "PUBLIC_KEY=$(readlink -f ${{ vars.COLLECTION_NAME }}.pub)" >> $GITHUB_ENV
           echo "SIGNATURE=$(readlink -f ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig)" >> $GITHUB_ENV
         env:
-          BUILD_NAME: ${{needs.publish.outputs.build_name}}
           RELEASE:  ${{ env.RELEASE_TAG }}
 
       - name: Upload Collection and Signature Files to GitHub
@@ -111,13 +95,13 @@ jobs:
 
       - name: Build Offline Collection
         run: |
-          rm -rf ${FULL_COLLECTION_PATH}/local/
-          cd ${FULL_COLLECTION_PATH}
+          rm -rf ${{ env.FULL_COLLECTION_PATH }}/local/
+          cd ${{ env.FULL_COLLECTION_PATH }}
           ansible-playbook ibm.operator_collection_sdk.create_offline_requirements
-          ansible-galaxy collection build ${FULL_COLLECTION_PATH} -f --output-path ${FULL_COLLECTION_PATH}/local/builds
-          COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)
-          mv ${FULL_COLLECTION_PATH}/local/builds/${COLLECTION_BUILD}${FULL_COLLECTION_PATH}/local/builds/${{ vars.COLLECTION_NAME }}-offline-${RELEASE}.tar.gz
-          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
+          ansible-galaxy collection build ${{ env.FULL_COLLECTION_PATH }} -f --output-path ${{ env.FULL_COLLECTION_PATH }}/local/builds
+          COLLECTION_BUILD=$(ls ${{ env.FULL_COLLECTION_PATH }}/local/builds)
+          mv ${{ env.FULL_COLLECTION_PATH }}/local/builds/${COLLECTION_BUILD}${{ env.FULL_COLLECTION_PATH }}/local/builds/${{ vars.COLLECTION_NAME }}-offline-${RELEASE}.tar.gz
+          echo "COLLECTION_BUILD_OFFLINE_LOCATION=${{ env.FULL_COLLECTION_PATH }}/local/builds/$(ls ${{ env.FULL_COLLECTION_PATH }}/local/builds)" >> $GITHUB_ENV
         env:
           RELEASE:  ${{ env.RELEASE_TAG }}
 
@@ -139,8 +123,3 @@ jobs:
           gh release upload ${RELEASE_TAG} ${SIGNATURE_OFFLINE}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-
-      - name: Publish Collection to Ansible Galaxy
-        run: ansible-galaxy collection publish -vvvv --api-key ${GALAXY_API_KEY} ${COLLECTION_BUILD_LOCATION}
-        env:
-          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
