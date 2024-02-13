@@ -71,12 +71,16 @@ jobs:
       - name: Build Collection
         run: |
           ansible-galaxy collection build ${FULL_COLLECTION_PATH} -f --output-path ${FULL_COLLECTION_PATH}/local/builds
-
-      - name: Sign Collection
-        run: |
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
+          echo "TEST_FIELD=${TEST/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_OUTPUT
+          echo "Printing TEST_FIELD"
+          echo "${{ steps.version.outputs.TAG_NAME }}"
+          echo ${{ steps.version.outputs.TAG_NAME }}
+
+      - name: Sign Collection
+        run: |
           openssl genrsa -out privatekey.pem 2048
           openssl rsa -in privatekey.pem -out ${{ vars.COLLECTION_NAME }}.pub -outform PEM -pubout
           openssl dgst -sha256 -sign privatekey.pem -out ${{ vars.COLLECTION_NAME }}-${RELEASE}.sig ${COLLECTION_BUILD_LOCATION}
