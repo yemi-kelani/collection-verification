@@ -123,8 +123,3 @@ jobs:
           gh release upload ${RELEASE_TAG} ${SIGNATURE_OFFLINE}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-
-      - name: Publish Collection to Ansible Galaxy
-        run: ansible-galaxy collection publish -vvvv --api-key ${GALAXY_API_KEY} ${COLLECTION_BUILD_LOCATION}
-        env:
-          GALAXY_API_KEY: ${{ secrets.GALAXY_API_KEY }}
