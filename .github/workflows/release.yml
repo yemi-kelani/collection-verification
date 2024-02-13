@@ -76,8 +76,8 @@ jobs:
 
           echo "TEST_FIELD=${TEST/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_OUTPUT
           echo "Printing TEST_FIELD"
-          echo "${{ steps.version.outputs.TAG_NAME }}"
-          echo ${{ steps.version.outputs.TAG_NAME }}
+          echo "${{ steps.version.outputs.TEST_FIELD }}"
+          echo ${{ steps.version.outputs.TEST_FIELD }}
 
       - name: Sign Collection
         run: |
