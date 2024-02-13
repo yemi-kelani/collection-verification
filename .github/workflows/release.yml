@@ -74,7 +74,7 @@ jobs:
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
-          echo "TEST_FIELD=${TEST/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_OUTPUT
+          echo "TEST_FIELD=${TEST/$(ls ${FULL_COLLECTION_PATH}/local)" >> $GITHUB_OUTPUT
           echo "Printing TEST_FIELD"
           echo "${{ steps.version.outputs.TEST_FIELD }}"
           echo ${{ steps.version.outputs.TEST_FIELD }}
