@@ -77,11 +77,20 @@ jobs:
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
-          echo "FOO=$(ls '${FULL_COLLECTION_PATH}/local/builds')" >> $GITHUB_ENV
-          echo "BUILD_NAME=$(ls '${FULL_COLLECTION_PATH}/local/builds')" >> $GITHUB_OUTPUT
+          echo "FOO=$(ls '${env.FULL_COLLECTION_PATH}/local/builds')" >> $GITHUB_ENV
+          echo "BUILD_NAME=$(ls '${env.FULL_COLLECTION_PATH}')" >> $GITHUB_OUTPUT
 
       - name: Sign Collection
         run: |
+          echo "01"
+          echo $FULL_COLLECTION_PATH
+
+          echo "02"
+          echo "${FULL_COLLECTION_PATH}"
+
+          echo "03"
+          echo "${{ env.FULL_COLLECTION_PATH }}"
+
           echo "Test 1 - FOO ENV"
           echo "${{ env.FOO }}"
 
