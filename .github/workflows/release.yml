@@ -74,9 +74,7 @@ jobs:
           echo "COLLECTION_BUILD=$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
           echo "COLLECTION_BUILD_LOCATION=${FULL_COLLECTION_PATH}/local/builds/$(ls ${FULL_COLLECTION_PATH}/local/builds)" >> $GITHUB_ENV
 
-          ls ${FULL_COLLECTION_PATH}/local/builds
-
-          ls ${GITHUB_WORKSPACE}
+          echo "Build Items $(ls ${FULL_COLLECTION_PATH}/local/builds)"
 
       - name: Sign Collection
         run: |
