@@ -46,7 +46,10 @@ jobs:
         run: ansible-galaxy collection install git+https://github.com/IBM/operator-collection-sdk.git#ibm/operator_collection_sdk -f
 
       - name: Test
-        run: pwd
+        run: pwd      
+
+      - name: Test 2
+        run: cd ~/ && pwd
 
       - name: Perform Sanity Tests
         working-directory: ~/.ansible/collections/ansible_collections/ibm/operator_collection_sdk
