@@ -52,8 +52,9 @@ jobs:
         run: cd ~/ && pwd
 
       - name: Perform Sanity Tests
-        working-directory: ~/.ansible/collections/ansible_collections/ibm/operator_collection_sdk
-        run: ansible-test sanity -v --venv
+        run: |
+          cd ~/.ansible/collections/ansible_collections/ibm/operator_collection_sdk
+          ansible-test sanity -v --venv
 
       - name: Install oc cli
         uses: redhat-actions/openshift-tools-installer@v1
