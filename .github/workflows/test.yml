@@ -1,0 +1,64 @@
+# Execute Molecule Tests
+
+name: Test
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  authorize:
+    name: Authorize
+    environment: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository && 'external' || 'internal' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
+  test:
+    name: Test
+    needs: [authorize]
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+
+    steps:
+      - name: Check-out repository for Branch builds
+        uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Check-out repository for PR builds
+        uses: actions/checkout@v3
+        with:
+          ref: "refs/pull/${{ github.event.number }}/merge"
+        if: github.event_name == 'pull_request_target'
+
+      - name: Install Python Requirements
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Perform PIP installs
+        run: pip install -r ${GITHUB_WORKSPACE}/requirements.txt
+
+      - name: Perform collection installs
+        run: ansible-galaxy collection install git+https://github.com/IBM/operator-collection-sdk.git#ibm/operator_collection_sdk -f
+
+      - name: Test path 1
+        run: ls ${GITHUB_WORKSPACE}
+
+      - name: Test path 2
+        run: ls ~/
+
+      - name: Test path 3
+        run: ls ~/work
+
+      - name: Perform Sanity Tests
+        # working-directory: .ansible/collections/ansible_collections/ibm/operator_collection_sdk
+        run: ansible-test sanity -v --venv
+
+      - name: Install oc cli
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          oc: latest
