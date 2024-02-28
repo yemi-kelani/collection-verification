@@ -54,6 +54,9 @@ jobs:
       - name: Test path 3
         run: ls ~/work
 
+      - name: Test path 4
+        run: ls ~/.ansible
+
       - name: Perform Sanity Tests
         # working-directory: .ansible/collections/ansible_collections/ibm/operator_collection_sdk
         run: ansible-test sanity -v --venv
